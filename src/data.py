@@ -2,7 +2,7 @@ import os
 import requests
 import zipfile
 import pandas as pd
-
+from .distance_matrix import create_distance_matrix
 data_dir = "data"
 zip_url = "https://simplemaps.com/static/data/world-cities/basic/simplemaps_worldcities_basicv1.77.zip"
 csv_filename = "worldcities.csv"
@@ -60,6 +60,9 @@ def filter_and_select_canada_cities(df: pd.DataFrame) -> pd.DataFrame:
     # Rename 'lng' to 'lon' for consistency (e.g., with Streamlit)
     lon_lat_df = lon_lat_df.rename(columns={'lng': 'lon'})
 
+    lon_lat_df['id'] = lon_lat_df.index
+    lon_lat_df = lon_lat_df[['id', 'city', 'lon', 'lat']]
+
     print(f"Filtered data to {len(lon_lat_df)} Canadian cities.")
     return lon_lat_df
 
@@ -84,6 +87,7 @@ def load_canada_cities_df() -> pd.DataFrame:
     print(f"Saving filtered data to {canada_parquet_path}...")
     canada_cities_df.to_parquet(canada_parquet_path, index=False)
     print("Saved cache.")
+    create_distance_matrix(canada_cities_df)
 
     return canada_cities_df
 
