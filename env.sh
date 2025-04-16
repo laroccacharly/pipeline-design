@@ -1,0 +1,1 @@
+alias ui="uv run streamlit run main.py"
