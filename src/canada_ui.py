@@ -4,6 +4,19 @@ import plotly.graph_objects as go
 from .data import load_canada_cities_df
 import numpy as np 
 from .haversine import haversine 
+from pydantic import BaseModel
+from typing import List
+
+class Arc(BaseModel):
+    start_city: str
+    end_city: str
+    start_lat: float
+    start_lon: float
+    end_lat: float
+    end_lon: float
+    mid_lat: float
+    mid_lon: float
+    hover_text: str
 
 def compute_distance_from_edmonton(df: pd.DataFrame) -> pd.DataFrame:
     """Calculates the distance of each city from Edmonton using the Haversine formula."""
@@ -31,47 +44,74 @@ def filter_closest_to_edmonton(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
     print(f"Filtered to {len(closest_df)} cities closest to Edmonton.")
     return closest_df
 
+def create_arcs(df: pd.DataFrame, num_target_cities: int = 5) -> List[Arc]:
+    """Creates a list of Arc objects representing connections from the closest city (Edmonton) 
+       to the next `num_target_cities - 1` closest cities."""
+    arcs = []
+
+    num_connections_to_make = min(num_target_cities, len(df)) # Ensure we don't go out of bounds
+    edmonton = df.iloc[0]
+
+    # Connect Edmonton (index 0) to the next num_connections_to_make - 1 cities
+    for i in range(1, num_connections_to_make):
+        target_city = df.iloc[i]
+
+        # Use pre-computed distance from Edmonton
+        distance = target_city['distance_from_edmonton']
+
+        mid_lat = (edmonton['lat'] + target_city['lat']) / 2
+        mid_lon = (edmonton['lon'] + target_city['lon']) / 2
+        # Use distance for hover text
+        hover_text = f"Distance: {distance:.2f} km"
+
+        arc = Arc(
+            start_city=edmonton['city'],
+            end_city=target_city['city'],
+            start_lat=edmonton['lat'],
+            start_lon=edmonton['lon'],
+            end_lat=target_city['lat'],
+            end_lon=target_city['lon'],
+            mid_lat=mid_lat,
+            mid_lon=mid_lon,
+            hover_text=hover_text
+        )
+        arcs.append(arc)
+
+    print(f"Created {len(arcs)} arcs originating from Edmonton.")
+    return arcs
+
 def create_canada_ui():
     df = load_canada_cities_df()
     df = compute_distance_from_edmonton(df)
-    df = filter_closest_to_edmonton(df, n=10)
-
-    # Column renaming now happens in src/data.py
+    # Filter to top N including Edmonton. Ensure n is large enough for desired connections.
+    num_cities_for_arcs = 5 # Edmonton + 4 others
+    df = filter_closest_to_edmonton(df, n=num_cities_for_arcs)
 
     st.title("Canadian Cities Map with Routes (Plotly)")
 
-    # --- Define Connections (Example: First 5 cities sequentially) ---
-    num_connections = 5
-    if len(df) < num_connections:
-        st.warning(f"Not enough cities ({len(df)}) to draw {num_connections-1} connections.")
-        connections = []
-    else:
-        # Pairs of indices to connect (e.g., (0, 1), (1, 2), ...)
-        connections = list(zip(range(num_connections - 1), range(1, num_connections)))
+    # --- Create Arcs --- Connect Edmonton to the next N-1 closest
+    arcs = create_arcs(df, num_target_cities=num_cities_for_arcs)
+    # -------------------
 
+    # --- Prepare data for Plotly traces from Arcs ---
     line_lats = []
     line_lons = []
     mid_lats = []
     mid_lons = []
     arc_hover_texts = []
 
-    for i, j in connections:
-        city1 = df.iloc[i]
-        city2 = df.iloc[j]
-
+    for arc in arcs:
         # Coordinates for the line segment
-        line_lats.extend([city1['lat'], city2['lat'], None]) # None separates lines
-        line_lons.extend([city1['lon'], city2['lon'], None])
+        line_lats.extend([arc.start_lat, arc.end_lat, None]) # None separates lines
+        line_lons.extend([arc.start_lon, arc.end_lon, None])
 
-        # Calculate midpoint for hover label placement
-        mid_lat = (city1['lat'] + city2['lat']) / 2
-        mid_lon = (city1['lon'] + city2['lon']) / 2
-        mid_lats.append(mid_lat)
-        mid_lons.append(mid_lon)
+        # Midpoint for hover label placement
+        mid_lats.append(arc.mid_lat)
+        mid_lons.append(arc.mid_lon)
 
-        # Define hover text for the arc
-        arc_hover_texts.append(f"Route: {city1['city']} -> {city2['city']}")
-    # --------------------------------------------------------------
+        # Hover text for the arc
+        arc_hover_texts.append(arc.hover_text)
+    # --------------------------------------------------
 
     fig = go.Figure()
 
@@ -96,22 +136,21 @@ def create_canada_ui():
         hovertemplate=[f"{text}<extra></extra>" for text in arc_hover_texts] # Use hovertemplate
     ))
 
-    # Add City Markers Trace
+    # Add City Markers Trace - Use the filtered DF for markers as well
     fig.add_trace(go.Scattermapbox(
         mode="markers",
-        lat=df['lat'],
-        lon=df['lon'],
+        lat=df['lat'], 
+        lon=df['lon'], 
         marker=dict(size=5, color="blue"),
         name="Cities",
         hoverinfo='text',
-        hovertext=df['city'] # Show city name on hover
+        hovertext=df['city'] 
     ))
-
 
     # Update Layout
     fig.update_layout(
-        mapbox_style="open-street-map",
-        mapbox_zoom=8,
+        mapbox_style="carto-positron",
+        mapbox_zoom=9,
         mapbox_center_lat = 53.5344, # Edmonton Lat
         mapbox_center_lon = -113.4903, # Edmonton Lon
         margin={"r":0,"t":30,"l":0,"b":0}, # Added top margin for title
