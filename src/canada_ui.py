@@ -38,7 +38,7 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
             'mid_lon': mid_lon,
             'hover_text': hover_text,
             'distance': distance,
-            'selected': np.random.randint(0, 2) 
+            'selected': 0, 
         })
 
     edge_df = pd.DataFrame(edges)
