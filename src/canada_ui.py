@@ -47,43 +47,32 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
     print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools.")
     return edge_df
 
-def get_graph_data(full_node_df: pd.DataFrame, num_cities_display: int = 10):
-    # Start with the full DataFrame passed as an argument
+def get_graph_data(max_node_count: int = 10):
+    full_node_df = load_canada_cities_df()
     node_df = compute_distance_from_edmonton(full_node_df)
-    # Ensure num_cities_display is at least 2 for filtering and edge creation
-    safe_num_cities = max(2, num_cities_display)
-    node_df = filter_closest_to_edmonton(node_df, n=safe_num_cities)
-
+    max_node_count = max(2, max_node_count)
+    node_df = filter_closest_to_edmonton(node_df, n=max_node_count)
     edge_df = create_edge_df(node_df)
     node_df, edge_df = solve_mst(node_df, edge_df)
     return node_df, edge_df
 
 def create_canada_ui():
-    st.title("Canadian Cities Map with Routes (Plotly)")
-
-    if 'num_cities_to_display' not in st.session_state:
-        st.session_state.num_cities_to_display = 10
-
+    st.title("Canadian Cities Map with Routes")
 
     input_num_cities = st.number_input(
         "Select number of cities to display (closest to Edmonton):",
         min_value=2,  # Need at least 2 cities for an edge
         max_value=30,
-        value=st.session_state.num_cities_to_display, # Use session state value
+        value="min", 
         step=1,
         key="city_input" # Assign a key for potential future reference
     )
-    update_button = st.button("Update Map")
+    update_button = st.button("Run")
 
-    # Compute graph only on first load or when Update Map button is clicked, with spinner for heavy computation
     if 'node_df' not in st.session_state or update_button:
-        # Update the session_state number of cities
-        st.session_state.num_cities_to_display = input_num_cities
-        with st.spinner("Computing routes and MST..."):
-            full_node_df = load_canada_cities_df()
+        with st.spinner("Computing routes..."):
             st.session_state.node_df, st.session_state.edge_df = get_graph_data(
-                full_node_df.copy(),
-                st.session_state.num_cities_to_display
+                input_num_cities
             )
 
     node_df = st.session_state.node_df
@@ -100,9 +89,6 @@ def create_canada_ui():
     mid_lats = selected_edge_df['mid_lat'].tolist()
     mid_lons = selected_edge_df['mid_lon'].tolist()
     arc_hover_texts = selected_edge_df['hover_text'].tolist()
-
-    # --- UI ---
-    st.title("Canadian Cities Map with Routes")
 
     fig = go.Figure()
 
