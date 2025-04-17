@@ -2,71 +2,49 @@ import pandas as pd
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
+import itertools 
 
 from .data import load_canada_cities_df
+from .edmonton import compute_distance_from_edmonton, filter_closest_to_edmonton
 from .distance_matrix import get_distance
 
-def compute_distance_from_edmonton(df: pd.DataFrame) -> pd.DataFrame:
-    """Calculates the distance of each city from Edmonton using the precomputed distance matrix."""
-    if 'id' not in df.columns:
-        st.error("City data must contain an 'id' column.")
-        df['distance_from_edmonton'] = np.nan
-        return df
-
-    try:
-        # Find Edmonton's ID
-        edmonton_id = df.loc[df['city'] == 'Edmonton', 'id'].iloc[0]
-    except IndexError:
-        st.error("Edmonton not found in the city data or does not have an ID. Cannot calculate distances.")
-        df['distance_from_edmonton'] = np.nan
-        return df
-
-    # Apply get_distance using Edmonton's ID and each city's ID
-    df['distance_from_edmonton'] = df['id'].apply(
-        lambda other_id: get_distance(edmonton_id, other_id)
-    )
-    print(f"Looked up distances from Edmonton (ID: {edmonton_id}).")
-    return df
-
-def filter_closest_to_edmonton(df: pd.DataFrame, n: int = 10) -> pd.DataFrame:
-    n = min(n, len(df))
-    closest_df = df.sort_values(by='distance_from_edmonton').head(n)
-    print(f"Filtered to {len(closest_df)} cities closest to Edmonton.")
-    return closest_df
 
 def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
-    """Creates a DataFrame representing connections (edges) from the first city (Edmonton)
-       to all other cities in the input node_df."""
+    """Creates a DataFrame representing connections (edges) between all pairs of cities
+       in the input node_df using itertools."""
     edges = []
+    num_nodes = len(node_df)
 
-    edmonton = node_df.iloc[0]
+    # Use itertools.combinations to generate unique pairs of indices
+    for i, j in itertools.combinations(range(num_nodes), 2):
+        start_city_row = node_df.iloc[i]
+        end_city_row = node_df.iloc[j]
 
-    for i in range(1, len(node_df)):
-        target_city = node_df.iloc[i]
+        # Use get_distance for accurate distance calculation
+        distance = get_distance(start_city_row['id'], end_city_row['id'])
 
-        distance = target_city['distance_from_edmonton']
-
-        mid_lat = (edmonton['lat'] + target_city['lat']) / 2
-        mid_lon = (edmonton['lon'] + target_city['lon']) / 2
-        hover_text = f"Distance: {distance:.2f} km"
+        mid_lat = (start_city_row['lat'] + end_city_row['lat']) / 2
+        mid_lon = (start_city_row['lon'] + end_city_row['lon']) / 2
+        hover_text = f"{start_city_row['city']} <-> {end_city_row['city']}: {distance:.2f} km"
 
         edges.append({
-            'start_city': edmonton['city'],
-            'end_city': target_city['city'],
-            'start_lat': edmonton['lat'],
-            'start_lon': edmonton['lon'],
-            'end_lat': target_city['lat'],
-            'end_lon': target_city['lon'],
+            'start_city': start_city_row['city'],
+            'end_city': end_city_row['city'],
+            'start_lat': start_city_row['lat'],
+            'start_lon': start_city_row['lon'],
+            'end_lat': end_city_row['lat'],
+            'end_lon': end_city_row['lon'],
             'mid_lat': mid_lat,
             'mid_lon': mid_lon,
             'hover_text': hover_text,
             'distance': distance,
-            'selected': np.random.randint(0, 2)
+            'selected': np.random.randint(0, 2) 
         })
 
     edge_df = pd.DataFrame(edges)
-    edge_df['selected'] = edge_df['selected'].astype(bool)
-    print(f"Created edge DataFrame with {len(edge_df)} edges originating from {edmonton['city']}. Added 'selected' attribute.")
+    if not edge_df.empty:
+        edge_df['selected'] = edge_df['selected'].astype(bool)
+    print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools. Used get_distance.")
     return edge_df
 
 def create_canada_ui():
