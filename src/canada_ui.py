@@ -7,7 +7,7 @@ import itertools
 from .data import load_canada_cities_df
 from .edmonton import compute_distance_from_edmonton, filter_closest_to_edmonton
 from .distance_matrix import get_distance
-
+from .mst import solve_mst
 
 def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
     """Creates a DataFrame representing connections (edges) between all pairs of cities
@@ -17,23 +17,23 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
 
     # Use itertools.combinations to generate unique pairs of indices
     for i, j in itertools.combinations(range(num_nodes), 2):
-        start_city_row = node_df.iloc[i]
-        end_city_row = node_df.iloc[j]
+        source_city_row = node_df.iloc[i]
+        target_city_row = node_df.iloc[j]
 
         # Use get_distance for accurate distance calculation
-        distance = get_distance(start_city_row['id'], end_city_row['id'])
+        distance = get_distance(source_city_row['id'], target_city_row['id'])
 
-        mid_lat = (start_city_row['lat'] + end_city_row['lat']) / 2
-        mid_lon = (start_city_row['lon'] + end_city_row['lon']) / 2
-        hover_text = f"{start_city_row['city']} <-> {end_city_row['city']}: {distance:.2f} km"
+        mid_lat = (source_city_row['lat'] + target_city_row['lat']) / 2
+        mid_lon = (source_city_row['lon'] + target_city_row['lon']) / 2
+        hover_text = f"{source_city_row['city']} <-> {target_city_row['city']}: {distance:.2f} km"
 
         edges.append({
-            'start_city': start_city_row['city'],
-            'end_city': end_city_row['city'],
-            'start_lat': start_city_row['lat'],
-            'start_lon': start_city_row['lon'],
-            'end_lat': end_city_row['lat'],
-            'end_lon': end_city_row['lon'],
+            'source': source_city_row['id'],
+            'target': target_city_row['id'],
+            'source_lat': source_city_row['lat'],
+            'source_lon': source_city_row['lon'],
+            'target_lat': target_city_row['lat'],
+            'target_lon': target_city_row['lon'],
             'mid_lat': mid_lat,
             'mid_lon': mid_lon,
             'hover_text': hover_text,
@@ -42,34 +42,67 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
         })
 
     edge_df = pd.DataFrame(edges)
-    if not edge_df.empty:
-        edge_df['selected'] = edge_df['selected'].astype(bool)
-    print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools. Used get_distance.")
+    edge_df['selected'] = edge_df['selected'].astype(bool)
+
+    print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools.")
     return edge_df
 
-def create_canada_ui():
-    node_df = load_canada_cities_df()
-    node_df = compute_distance_from_edmonton(node_df)
-    num_cities_display = 10
-    node_df = filter_closest_to_edmonton(node_df, n=num_cities_display)
+def get_graph_data(full_node_df: pd.DataFrame, num_cities_display: int = 10):
+    # Start with the full DataFrame passed as an argument
+    node_df = compute_distance_from_edmonton(full_node_df)
+    # Ensure num_cities_display is at least 2 for filtering and edge creation
+    safe_num_cities = max(2, num_cities_display)
+    node_df = filter_closest_to_edmonton(node_df, n=safe_num_cities)
 
     edge_df = create_edge_df(node_df)
+    node_df, edge_df = solve_mst(node_df, edge_df)
+    return node_df, edge_df
+
+def create_canada_ui():
+    st.title("Canadian Cities Map with Routes (Plotly)")
+
+    if 'num_cities_to_display' not in st.session_state:
+        st.session_state.num_cities_to_display = 10
+
+
+    input_num_cities = st.number_input(
+        "Select number of cities to display (closest to Edmonton):",
+        min_value=2,  # Need at least 2 cities for an edge
+        max_value=30,
+        value=st.session_state.num_cities_to_display, # Use session state value
+        step=1,
+        key="city_input" # Assign a key for potential future reference
+    )
+    update_button = st.button("Update Map")
+
+    # Compute graph only on first load or when Update Map button is clicked, with spinner for heavy computation
+    if 'node_df' not in st.session_state or update_button:
+        # Update the session_state number of cities
+        st.session_state.num_cities_to_display = input_num_cities
+        with st.spinner("Computing routes and MST..."):
+            full_node_df = load_canada_cities_df()
+            st.session_state.node_df, st.session_state.edge_df = get_graph_data(
+                full_node_df.copy(),
+                st.session_state.num_cities_to_display
+            )
+
+    node_df = st.session_state.node_df
+    edge_df = st.session_state.edge_df
 
     selected_edge_df = edge_df[edge_df['selected']].copy()
-    print(f"Filtered to {len(selected_edge_df)} selected edges.")
 
     line_lats = []
     line_lons = []
     for _, edge in selected_edge_df.iterrows():
-        line_lats.extend([edge['start_lat'], edge['end_lat'], None])
-        line_lons.extend([edge['start_lon'], edge['end_lon'], None])
+        line_lats.extend([edge['source_lat'], edge['target_lat'], None])
+        line_lons.extend([edge['source_lon'], edge['target_lon'], None])
 
     mid_lats = selected_edge_df['mid_lat'].tolist()
     mid_lons = selected_edge_df['mid_lon'].tolist()
     arc_hover_texts = selected_edge_df['hover_text'].tolist()
 
     # --- UI ---
-    st.title("Canadian Cities Map with Routes (Plotly)")
+    st.title("Canadian Cities Map with Routes")
 
     fig = go.Figure()
 
@@ -104,7 +137,7 @@ def create_canada_ui():
 
     fig.update_layout(
         mapbox_style="carto-positron",
-        mapbox_zoom=9,
+        mapbox_zoom=8,
         mapbox_center_lat = 53.5344,
         mapbox_center_lon = -113.4903,
         margin={"r":0,"t":30,"l":0,"b":0},

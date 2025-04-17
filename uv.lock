@@ -144,6 +144,21 @@ wheels = [
 ]
 
 [[package]]
+name = "gurobipy"
+version = "12.0.1"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/74/cfa692c327b44bf7c2c5250dbcfe66a19cc9ec1dd6524de8dbbaeaff311c/gurobipy-12.0.1-cp312-cp312-macosx_10_9_universal2.whl", hash = "sha256:642ac600488a67fbbf82656611a9db5493d70e6ce0964e191c447a64106c325c", size = 12156498 },
+    { url = "https://files.pythonhosted.org/packages/8e/06/af2745c9a15139a82b52d33c2d86acc5374676f7c6bc4eda793f2a27dee8/gurobipy-12.0.1-cp312-cp312-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:45ff1dce01f785b2fb5cf7ea62da904a44920bb26e9480fbfedf1d2f67dac1ae", size = 62547371 },
+    { url = "https://files.pythonhosted.org/packages/07/86/9cf33e48356fdf5001dbee4ab3ee04068a2f8c59bd7fffb452531bcb1b34/gurobipy-12.0.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:e36c57df0330c4277294d090565a56c56a083d83d70c30af8e9c444d80a854a5", size = 14233878 },
+    { url = "https://files.pythonhosted.org/packages/fd/0f/de29b131d3dce78b5f6b37919dd97f722adb23daa1057d91177c02e95389/gurobipy-12.0.1-cp312-cp312-win_amd64.whl", hash = "sha256:f09b84138e17fcb774475f673b9fe7d3ed8137e7eb7834ce3185688e054fc6e2", size = 11113683 },
+    { url = "https://files.pythonhosted.org/packages/4c/81/a781b8751f48eea80cefbd8824fcadae492f8c9d33fc1871dec0f2670325/gurobipy-12.0.1-cp313-cp313-macosx_10_13_universal2.whl", hash = "sha256:ca490ae7a4da730361b33564350a94c0ad605cbf70be733071b1c7b522665355", size = 12117751 },
+    { url = "https://files.pythonhosted.org/packages/c0/4b/460ab68599f7359094787f10591be987c702a509923856e628c357d704be/gurobipy-12.0.1-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:c971e40ddce1751e077e160593ed38d76a73d298365fd3f90737c1543104424d", size = 62551104 },
+    { url = "https://files.pythonhosted.org/packages/da/65/887481a8b4d5bd7a4f3cfcd41d1371d04e796fbeaadcb0ef3610ed55c3d5/gurobipy-12.0.1-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:6e007cedc2c69f5a17918d0fe34e88e95f1670b5c24ac828a0df2b1716343459", size = 14241030 },
+    { url = "https://files.pythonhosted.org/packages/84/cc/fb56310beac81634a5fda3a9e34d82eb65dcca1264563cfb19f8e2a99cd6/gurobipy-12.0.1-cp313-cp313-win_amd64.whl", hash = "sha256:513017eb17eb3cc7a8d32fccbeee046fc40c9b84808243d922523d78df390179", size = 11103896 },
+]
+
+[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.org/simple" }
@@ -365,6 +380,7 @@ name = "pipeline-design"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "gurobipy" },
     { name = "pandas" },
     { name = "plotly" },
     { name = "pyarrow" },
@@ -375,6 +391,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "gurobipy", specifier = ">=12.0.1" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.0.1" },
     { name = "pyarrow", specifier = ">=19.0.1" },
