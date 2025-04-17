@@ -8,6 +8,8 @@ from .data import load_canada_cities_df
 from .edmonton import compute_distance_from_edmonton, filter_closest_to_edmonton
 from .distance_matrix import get_distance
 from .mst import solve_mst
+from .demand import generate_demand
+from .solve_flow_problem import solve_flow_problem
 
 def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
     """Creates a DataFrame representing connections (edges) between all pairs of cities
@@ -52,8 +54,11 @@ def get_graph_data(max_node_count: int = 10):
     node_df = compute_distance_from_edmonton(full_node_df)
     max_node_count = max(2, max_node_count)
     node_df = filter_closest_to_edmonton(node_df, n=max_node_count)
+    node_df = generate_demand(node_df)
     edge_df = create_edge_df(node_df)
     node_df, edge_df = solve_mst(node_df, edge_df)
+    edge_df = edge_df[edge_df['selected']]
+    node_df, edge_df = solve_flow_problem(node_df, edge_df)
     return node_df, edge_df
 
 def create_canada_ui():
@@ -78,17 +83,17 @@ def create_canada_ui():
     node_df = st.session_state.node_df
     edge_df = st.session_state.edge_df
 
-    selected_edge_df = edge_df[edge_df['selected']].copy()
+    edge_df = edge_df[edge_df['selected']].copy()
 
     line_lats = []
     line_lons = []
-    for _, edge in selected_edge_df.iterrows():
+    for _, edge in edge_df.iterrows():
         line_lats.extend([edge['source_lat'], edge['target_lat'], None])
         line_lons.extend([edge['source_lon'], edge['target_lon'], None])
 
-    mid_lats = selected_edge_df['mid_lat'].tolist()
-    mid_lons = selected_edge_df['mid_lon'].tolist()
-    arc_hover_texts = selected_edge_df['hover_text'].tolist()
+    mid_lats = edge_df['mid_lat'].tolist()
+    mid_lons = edge_df['mid_lon'].tolist()
+    arc_hover_texts = edge_df.apply(lambda row: f"{row['hover_text']}<br>Flow: {row['flow']:.2f}", axis=1).tolist()
 
     fig = go.Figure()
 
@@ -113,12 +118,22 @@ def create_canada_ui():
 
     fig.add_trace(go.Scattermapbox(
         mode="markers",
-        lat=node_df['lat'],
-        lon=node_df['lon'],
-        marker=dict(size=5, color="blue"),
-        name="Cities",
+        lat=node_df[node_df['demand_met']]['lat'],
+        lon=node_df[node_df['demand_met']]['lon'],
+        marker=dict(size=5, color="green"),
+        name="Cities (Demand Met)",
         hoverinfo='text',
-        hovertext=node_df['city']
+        hovertext=node_df[node_df['demand_met']].apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Served: {row['actual_demand_served']:.2f}", axis=1)
+    ))
+
+    fig.add_trace(go.Scattermapbox(
+        mode="markers",
+        lat=node_df[~node_df['demand_met']]['lat'],
+        lon=node_df[~node_df['demand_met']]['lon'],
+        marker=dict(size=5, color="red"),
+        name="Cities (Demand Unmet)",
+        hoverinfo='text',
+        hovertext=node_df[~node_df['demand_met']].apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Served: {row['actual_demand_served']:.2f}", axis=1)
     ))
 
     fig.update_layout(
