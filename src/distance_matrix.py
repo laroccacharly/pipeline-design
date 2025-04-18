@@ -59,12 +59,10 @@ def load_distance_matrix(input_path: str = _PARQUET_PATH) -> pd.DataFrame:
     Raises:
         FileNotFoundError: If the parquet file does not exist.
     """
-    print(f"Loading distance matrix from {input_path}...")
     if not os.path.exists(input_path):
         raise FileNotFoundError(f"Distance matrix file not found at {input_path}. "
                               "Consider running create_distance_matrix first.")
     df = pd.read_parquet(input_path)
-    print(f"Loaded {len(df)} distance pairs.")
     return df
 
 def _populate_distance_hash_from_file(input_path: str = _PARQUET_PATH):
@@ -81,7 +79,6 @@ def _populate_distance_hash_from_file(input_path: str = _PARQUET_PATH):
                 key = (min(int(row['city_A_id']), int(row['city_B_id'])),
                        max(int(row['city_A_id']), int(row['city_B_id'])))
                 _distance_matrix_hash[key] = row['distance']
-            print(f"Distance hash cache populated with {len(_distance_matrix_hash)} entries.")
         except FileNotFoundError as e:
             # If the file doesn't exist, we can't populate the cache.
             print(f"Warning: Could not populate hash cache. {e}")

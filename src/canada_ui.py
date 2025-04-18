@@ -84,6 +84,10 @@ def create_canada_ui():
     edge_df = st.session_state.edge_df
 
     edge_df = edge_df[edge_df['selected']].copy()
+    sources_nodes = node_df[node_df["demand"] < 0]
+    sinks_nodes = node_df[node_df["demand"] > 0]
+    sink_nodes_demand_met = sinks_nodes[sinks_nodes['demand_met']]
+    sink_nodes_demand_unmet = sinks_nodes[~sinks_nodes['demand_met']]
 
     line_lats = []
     line_lons = []
@@ -115,25 +119,35 @@ def create_canada_ui():
         hoverinfo='skip',
         hovertemplate=[f"{text}<extra></extra>" for text in arc_hover_texts]
     ))
-
+    # Trace for sources nodes
     fig.add_trace(go.Scattermapbox(
         mode="markers",
-        lat=node_df[node_df['demand_met']]['lat'],
-        lon=node_df[node_df['demand_met']]['lon'],
-        marker=dict(size=5, color="green"),
-        name="Cities (Demand Met)",
+        lat=sources_nodes['lat'],
+        lon=sources_nodes['lon'],
+        marker=dict(size=10, color="black"),
+        name="Sources",
         hoverinfo='text',
-        hovertext=node_df[node_df['demand_met']].apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Served: {row['actual_demand_served']:.2f}", axis=1)
+        hovertext=sources_nodes.apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Inbound: {row['inbound_flow']:.2f}<br>Outbound: {row['outbound_flow']:.2f}<br>Flow Difference: {row['flow_difference']:.2f}", axis=1)
     ))
 
     fig.add_trace(go.Scattermapbox(
         mode="markers",
-        lat=node_df[~node_df['demand_met']]['lat'],
-        lon=node_df[~node_df['demand_met']]['lon'],
+        lat=sink_nodes_demand_met['lat'],
+        lon=sink_nodes_demand_met['lon'],
+        marker=dict(size=5, color="green"),
+        name="Cities (Demand Met)",
+        hoverinfo='text',
+        hovertext=sink_nodes_demand_met.apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Inbound: {row['inbound_flow']:.2f}<br>Outbound: {row['outbound_flow']:.2f}<br>Flow Difference: {row['flow_difference']:.2f}", axis=1)
+    ))
+
+    fig.add_trace(go.Scattermapbox(
+        mode="markers",
+        lat=sink_nodes_demand_unmet['lat'],
+        lon=sink_nodes_demand_unmet['lon'],
         marker=dict(size=5, color="red"),
         name="Cities (Demand Unmet)",
         hoverinfo='text',
-        hovertext=node_df[~node_df['demand_met']].apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Served: {row['actual_demand_served']:.2f}", axis=1)
+        hovertext=sink_nodes_demand_unmet.apply(lambda row: f"{row['city']}<br>Demand: {row['demand']:.2f}<br>Inbound: {row['inbound_flow']:.2f}<br>Outbound: {row['outbound_flow']:.2f}<br>Flow Difference: {row['flow_difference']:.2f}", axis=1)
     ))
 
     fig.update_layout(

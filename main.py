@@ -1,8 +1,8 @@
-from src.data import load_canada_cities_df
-from src.canada_ui import create_canada_ui
+
+from src.canada_ui import get_graph_data
 
 def main():
-    create_canada_ui()
+    get_graph_data(30)
 
 if __name__ == "__main__":
     main()

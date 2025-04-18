@@ -71,8 +71,6 @@ def solve_mst(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tuple[pd.DataFram
                 selected_edge_tuples.add((u, v))
                 selected_edges += 1
 
-        print("MST solution generated using Kruskal's algorithm.")
-        print(f"Total edges selected: {len(selected_edge_tuples)}")
 
         # Update the 'selected' column in the original edge_df
         total_distance = 0
@@ -84,7 +82,6 @@ def solve_mst(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tuple[pd.DataFram
         # Convert 'selected' column to boolean type
         edge_df['selected'] = edge_df['selected'].astype(bool)
         
-        print(f"Total MST Distance: {total_distance:.2f}")
         return node_df, edge_df
 
     except Exception as e:
