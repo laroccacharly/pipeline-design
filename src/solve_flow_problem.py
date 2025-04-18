@@ -51,8 +51,16 @@ def solve_flow_problem(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tuple[pd
     total_flow = gp.quicksum(flow[edge] for edge in G.edges())
     total_unmet_demand = gp.quicksum(unmet_demand[node] for node in sink_node_ids)
     total_unused_capacity = gp.quicksum(unused_capacity[node] for node in source_node_ids)
-    # Objective, minimize unmet demand
-    model.setObjective(0.5 *total_flow + total_unmet_demand, GRB.MINIMIZE)
+    # total_cost = gp.quicksum(G.edges[edge]['distance'] * flow[edge] for edge in G.edges())
+    total_cost = total_unmet_demand + total_flow * 0.1
+    model.setObjective(total_cost, GRB.MINIMIZE)
+    # Force total capacity use when bounded by capacity
+    if total_demand > total_capacity:
+        model.addConstr(total_unused_capacity == 0, name="force_capacity_use")
+
+    if total_demand < total_capacity:
+        model.addConstr(total_unmet_demand == 0, name="force_demand_use")
+
 
     # Conversation on source nodes
     for node in source_node_ids:
