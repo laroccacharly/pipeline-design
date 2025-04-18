@@ -82,7 +82,6 @@ def create_canada_ui():
 
     node_df = st.session_state.node_df
     edge_df = st.session_state.edge_df
-
     edge_df = edge_df[edge_df['selected']].copy()
     sources_nodes = node_df[node_df["demand"] < 0]
     sinks_nodes = node_df[node_df["demand"] > 0]
