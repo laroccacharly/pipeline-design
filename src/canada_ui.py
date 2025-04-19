@@ -1,14 +1,11 @@
-import pandas as pd
 import streamlit as st
-import numpy as np
 import plotly.graph_objects as go
-import itertools 
 
 from .data import load_canada_cities_df
 from .edmonton import compute_distance_from_edmonton, filter_closest_to_edmonton
 from .mst import solve_mst
 from .demand import generate_demand
-from .solve_flow_problem import solve_flow_problem
+from .solve_flow_problem_grb import solve_flow_problem_grb
 from .config import Config
 from .create_edge_df import create_edge_df
 
@@ -21,7 +18,7 @@ def get_graph_data(config: Config):
     edge_df = create_edge_df(node_df)
     node_df, edge_df = solve_mst(node_df, edge_df)
     edge_df = edge_df[edge_df['selected']]
-    node_df, edge_df, metrics = solve_flow_problem(node_df, edge_df)
+    node_df, edge_df, metrics = solve_flow_problem_grb(node_df, edge_df)
     return node_df, edge_df, metrics
 
 def create_canada_ui():

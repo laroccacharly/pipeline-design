@@ -12,7 +12,7 @@ def duplicate_edges(edge_df: pd.DataFrame) -> pd.DataFrame:
     reverse_source_target['target'] = edge_df['source']
     return pd.concat([edge_df, reverse_source_target], ignore_index=True)
 
-def solve_flow_problem(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, any]]:
+def solve_flow_problem_grb(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, any]]:
     """
         edge_df is a df of undirected edges. We need to conver to networkx and then add the reverse edge for each edge to make it a directed graph.
         No capacity on edges. 
