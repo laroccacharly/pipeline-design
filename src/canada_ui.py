@@ -43,22 +43,22 @@ def create_canada_ui():
     # Input fields in the sidebar
     with st.sidebar:
         input_num_cities = st.number_input(
-            "Select number of cities to display (closest to Edmonton):",
+            "Number of cities to display (closest to Edmonton):",
             min_value=2,  # Need at least 2 cities for an edge
             max_value=100,
-            value="min", 
+            value=30, 
             step=1,
             key="city_input" # Assign a key for potential future reference
         )
         average_capacity_per_city = st.number_input(
-            "Average capacity per city:",
+            "Average capacity per source city:",
             min_value=1,
             max_value=1000,
             value=100,
             step=1
         )
         average_demand_per_city = st.number_input(
-            "Average demand per city:",
+            "Average demand per sink city:",
             min_value=1,
             max_value=1000,
             value=10,
@@ -77,7 +77,7 @@ def create_canada_ui():
             st.session_state.node_df, st.session_state.edge_df, st.session_state.metrics = get_graph_data(config)
 
 
-    st.subheader("Optimization Metrics")
+    st.subheader("Metrics")
     metrics = st.session_state.metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -87,7 +87,7 @@ def create_canada_ui():
     with col3:
         st.metric("Is Optimal", f"{metrics['is_optimal']}")
     with col4:
-        st.metric("Runtime (s)", f"{metrics['runtime']:.2f}")
+        st.metric("Runtime (ms)", f"{1000 * metrics['runtime']:.2f}")
 
     node_df = st.session_state.node_df
     edge_df = st.session_state.edge_df
@@ -160,7 +160,7 @@ def create_canada_ui():
 
     fig.update_layout(
         mapbox_style="carto-positron",
-        mapbox_zoom=8,
+        mapbox_zoom=5,
         mapbox_center_lat = 53.5344,
         mapbox_center_lon = -113.4903,
         margin={"r":0,"t":30,"l":0,"b":0},
@@ -171,8 +171,13 @@ def create_canada_ui():
     config = {'scrollZoom': True}
     st.plotly_chart(fig, use_container_width=True, config=config)
 
+    st.subheader("Node Data")
+    node_cols_to_show = [col for col in node_df.columns if 'lon' not in col.lower() and 'lat' not in col.lower()]
+    st.dataframe(node_df[node_cols_to_show])
 
-
+    st.subheader("Edge Data")
+    edge_cols_to_show = [col for col in edge_df.columns if 'lon' not in col.lower() and 'lat' not in col.lower()]
+    st.dataframe(edge_df[edge_cols_to_show])
 
 if __name__ == "__main__":
     create_canada_ui()
