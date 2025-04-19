@@ -159,6 +159,37 @@ wheels = [
 ]
 
 [[package]]
+name = "highspy"
+version = "1.10.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f9/a1/bf903f8325b86cf3c31801b5d2709d4f21be1cf013279dc2e34d831b2028/highspy-1.10.0.tar.gz", hash = "sha256:65f9e0ea6dbe7256b790570c4f6b908b3f734cbc8cf5b2d5ebeadb28a4fe2486", size = 1439204 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/21/da8db3b9d5503969ac8b499cf0f1fc0eade3f3df9bf649d7c4b8161cfdde/highspy-1.10.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:5daf999e37db769239c7bb8c49dbd8aa07fee96cef0aec30f187c75462adfc05", size = 2195957 },
+    { url = "https://files.pythonhosted.org/packages/40/49/2a3e3d8b0f800efeadef54b452fabffe459c91cfd761eafd476d907b5534/highspy-1.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:13014998f8e2666cbc956f486926d90d430c470262443c1d9b171c49dfbf41a7", size = 1880575 },
+    { url = "https://files.pythonhosted.org/packages/ec/16/ad453c1910280a1f9cd6aaa4d22089e62b284e99a7afeb797ec7cd6665e8/highspy-1.10.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8b272da4bd8f53b56a8b172ad5e4223dba7de5cb440e8676fa79d81ce35e4137", size = 2091262 },
+    { url = "https://files.pythonhosted.org/packages/96/bd/aabe50ba6c5cdb7259bf575ca318c9c998d7b3129b06d144626767ce89b9/highspy-1.10.0-cp312-cp312-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:458f3930da51fae9454fa861928d142de5391d4e56768ae48ed7fbe4436ccd24", size = 2410440 },
+    { url = "https://files.pythonhosted.org/packages/46/ed/6cc5a732f71617ceaab6c6d2f2905ef7fbc90b9b6addc688d521b47fc96f/highspy-1.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:ebdb29b61c4903ac925282c08cdc33b92b1a43620f9d67aeb191e402388786ee", size = 2274047 },
+    { url = "https://files.pythonhosted.org/packages/86/b8/63e4cfcfcd6222882693b8d401627c5b39efc1b8c884b65cfa394fa44659/highspy-1.10.0-cp312-cp312-musllinux_1_2_aarch64.whl", hash = "sha256:1af0ded20073e8662ed13662c8a5f7b2890621833e20bd60b97528b214baf030", size = 3071877 },
+    { url = "https://files.pythonhosted.org/packages/a2/01/18b768da1a6c5d84ba6f724287966f751e844b49a037ead4f5997dfd770e/highspy-1.10.0-cp312-cp312-musllinux_1_2_i686.whl", hash = "sha256:f7803e3507649bb5afbbcb9ffaddef601931745dd44f61d6876aefbd119a7743", size = 3612445 },
+    { url = "https://files.pythonhosted.org/packages/d4/6a/b3b921df8cfdaa52aed52d62af8ecd30fdb230f89af09df8f76ec419e6a7/highspy-1.10.0-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:dfbaa97b3958f9442c84b821eb6605c5b586d11551edae188a523054a61f817d", size = 3276768 },
+    { url = "https://files.pythonhosted.org/packages/b9/59/694ea12641c36922f7965d0036dbfa6c8c3640831f629c9c2385aecd124e/highspy-1.10.0-cp312-cp312-win32.whl", hash = "sha256:5ca136d3466b46b0bd1919233759846ee9f1f18734d3b8312104542d607088a8", size = 1408285 },
+    { url = "https://files.pythonhosted.org/packages/a3/4a/bbf9da2605861948cea634d7783997f0b44c7000cf7951847e8b41cbdcf5/highspy-1.10.0-cp312-cp312-win_amd64.whl", hash = "sha256:7d1a1f1eff61965d6358638ab430d8fe2aff30df8d9a42e1f62a07279aa67ef0", size = 1653787 },
+    { url = "https://files.pythonhosted.org/packages/89/fb/48ea5b239a949a6aecf3e277d5bb336d0ec107dd860517c88c450ac71d9b/highspy-1.10.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:63ba93e69a2034e0085493fdab144fdfffde8a12c78169996c3d6d689683b449", size = 2195911 },
+    { url = "https://files.pythonhosted.org/packages/ee/12/dbc4b73dc70e6ed02341744f483a979d5b40c67e28aa1f5a3aaec5efdc05/highspy-1.10.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:aa1beadd330f2bb57eb2dbef1ab9f1ba73171995438b5021b1ba110405165d94", size = 1880554 },
+    { url = "https://files.pythonhosted.org/packages/6a/c0/c6c7ef15d8e3712ea6a5be7ea506ebb2fe24cdea0fb52c320baca7c19479/highspy-1.10.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:022fa1092bf15762f01d21234786c2cbc146c81d7d694d2388a3777ee0af05fb", size = 2091030 },
+    { url = "https://files.pythonhosted.org/packages/20/1a/307150129779f7b9b89119e3415a7004b89ceb999eaf372c12c6b7dcde69/highspy-1.10.0-cp313-cp313-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c1ffa3a60572095230ff95f8b36b8fb34c3971c3b779c443bd7cf8ca821c9e64", size = 2411205 },
+    { url = "https://files.pythonhosted.org/packages/30/68/f40eb7a885dcbfdac15582c1bf3542576b4e5a803d771060591f0f930897/highspy-1.10.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1acfe50892504b8ddcc8c3b023ede71e217fbfee914f4219c2cee43d7fb164a5", size = 2273958 },
+    { url = "https://files.pythonhosted.org/packages/06/a5/14ab8455e8b8b08e99c1edc30c6340d67ea4b222440305fa9dde6032fec8/highspy-1.10.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:da9350f3f4c1cc9e613752fa24fd5e356b46e26dbb1ed57fd849c12e34b0eb83", size = 3071775 },
+    { url = "https://files.pythonhosted.org/packages/f2/54/8094e5c2fc0a4d28f1dc16502ee77e49c27206aa60fc6e5d4845938d3e77/highspy-1.10.0-cp313-cp313-musllinux_1_2_i686.whl", hash = "sha256:e8d6300708ed61717eaa7f84b16836f1cd54d3a8d7a46f4789ab61d529d1b469", size = 3612917 },
+    { url = "https://files.pythonhosted.org/packages/56/c4/3a9366e4c2c573d60480b717cef4f0716ea906cb7de8268ec2e19b1e063a/highspy-1.10.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:d94409de3288da8626d7f1d3633a87c266c9aeb44fb3aa7d6c37461313f976c6", size = 3276145 },
+    { url = "https://files.pythonhosted.org/packages/56/e1/612924aa23d937f0f51f85d6a3ae8cb5697703e8c7054dda33a4a5462db0/highspy-1.10.0-cp313-cp313-win32.whl", hash = "sha256:39d93fb955ae349766019710f535f2eb1fe01cb9057601ef2884f91357427a6a", size = 1408159 },
+    { url = "https://files.pythonhosted.org/packages/3b/bc/60cf0fabd9f9b573d9601f22e85acf3e7afb2529a00dc819c3cfca342111/highspy-1.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:7b8ecb7e09fc10398188880aed91565288f02298123d4659d5f87cdafa677a74", size = 1653842 },
+]
+
+[[package]]
 name = "idna"
 version = "3.10"
 source = { registry = "https://pypi.org/simple" }
@@ -390,6 +421,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "gurobipy" },
+    { name = "highspy" },
     { name = "networkx" },
     { name = "pandas" },
     { name = "plotly" },
@@ -402,6 +434,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "gurobipy", specifier = ">=12.0.1" },
+    { name = "highspy", specifier = ">=1.10.0" },
     { name = "networkx", specifier = ">=3.4.2" },
     { name = "pandas", specifier = ">=2.2.3" },
     { name = "plotly", specifier = ">=6.0.1" },
