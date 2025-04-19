@@ -72,9 +72,10 @@ def create_canada_ui():
     st.sidebar.markdown("---")
     st.sidebar.subheader("About")
     st.sidebar.info(
-        "This application solves a pipeline design and flow optimization problem. " 
-        "It calculates the Minimum Spanning Tree (MST) to connect Canadian cities " 
-        "closest to Edmonton and then optimizes the flow to minimize unmet demand. Edmonton and Calgary are the only sources nodes and all other nodes are sinks. "
+        "This application solves a pipeline design and a flow optimization problem. \
+        It calculates the Minimum Spanning Tree (MST) to connect Canadian cities \
+        closest to Edmonton and then optimizes the flow to minimize unmet demand. \
+        Edmonton and Calgary are the only sources nodes and all other nodes are sinks. "
     )
 
     config = Config(
