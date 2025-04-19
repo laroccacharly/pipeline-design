@@ -4,7 +4,7 @@ import numpy as np
 # Set a global seed for reproducibility
 np.random.seed(42)
 
-def generate_demand(node_df: pd.DataFrame) -> pd.DataFrame:
+def generate_demand(node_df: pd.DataFrame, average_capacity_per_city: int = 100, average_demand_per_city: int = 10) -> pd.DataFrame:
     """
     Assigns demand to each node in the dataframe.
     Edmonton and Calgary are source nodes with negative demand (capacity).
@@ -13,11 +13,12 @@ def generate_demand(node_df: pd.DataFrame) -> pd.DataFrame:
     
     Args:
         node_df (pd.DataFrame): Dataframe containing node information with 'city' column.
-    
+        average_capacity_per_city (int): Average capacity per city.
+        average_demand_per_city (int): Average demand per city.
     Returns:
         pd.DataFrame: Dataframe with added 'demand' column.
     """
     node_df['demand'] = node_df['city'].apply(
-        lambda x: -100 + np.random.uniform(-20, 20) if x in ['Edmonton', 'Calgary'] else 10 + np.random.uniform(-5, 5)
+        lambda x: -average_capacity_per_city + np.random.uniform(-20, 20) if x in ['Edmonton', 'Calgary'] else average_demand_per_city + np.random.uniform(-5, 5)
     )
     return node_df 

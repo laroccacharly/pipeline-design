@@ -10,7 +10,7 @@ from .distance_matrix import get_distance
 from .mst import solve_mst
 from .demand import generate_demand
 from .solve_flow_problem import solve_flow_problem
-
+from .config import Config
 def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
     """Creates a DataFrame representing connections (edges) between all pairs of cities
        in the input node_df using itertools."""
@@ -49,36 +49,69 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
     print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools.")
     return edge_df
 
-def get_graph_data(max_node_count: int = 10):
+def get_graph_data(config: Config):
     full_node_df = load_canada_cities_df()
     node_df = compute_distance_from_edmonton(full_node_df)
-    max_node_count = max(2, max_node_count)
+    max_node_count = max(2, config.max_node_count)
     node_df = filter_closest_to_edmonton(node_df, n=max_node_count)
-    node_df = generate_demand(node_df)
+    node_df = generate_demand(node_df, config.average_capacity_per_node, config.average_demand_per_node)
     edge_df = create_edge_df(node_df)
     node_df, edge_df = solve_mst(node_df, edge_df)
     edge_df = edge_df[edge_df['selected']]
-    node_df, edge_df = solve_flow_problem(node_df, edge_df)
-    return node_df, edge_df
+    node_df, edge_df, metrics = solve_flow_problem(node_df, edge_df)
+    return node_df, edge_df, metrics
 
 def create_canada_ui():
-    st.title("Canadian Cities Map with Routes")
+    st.title("Pipeline Design and Flow Optimization")
 
-    input_num_cities = st.number_input(
-        "Select number of cities to display (closest to Edmonton):",
-        min_value=2,  # Need at least 2 cities for an edge
-        max_value=30,
-        value="min", 
-        step=1,
-        key="city_input" # Assign a key for potential future reference
+    # Input fields in the sidebar
+    with st.sidebar:
+        input_num_cities = st.number_input(
+            "Select number of cities to display (closest to Edmonton):",
+            min_value=2,  # Need at least 2 cities for an edge
+            max_value=30,
+            value="min", 
+            step=1,
+            key="city_input" # Assign a key for potential future reference
+        )
+        average_capacity_per_city = st.number_input(
+            "Average capacity per city:",
+            min_value=1,
+            max_value=1000,
+            value=100,
+            step=1
+        )
+        average_demand_per_city = st.number_input(
+            "Average demand per city:",
+            min_value=1,
+            max_value=1000,
+            value=10,
+            step=1
+        )
+
+        update_button = st.button("Run")
+
+    config = Config(
+        average_capacity_per_node=average_capacity_per_city,
+        average_demand_per_node=average_demand_per_city,
+        max_node_count=input_num_cities
     )
-    update_button = st.button("Run")
-
     if 'node_df' not in st.session_state or update_button:
         with st.spinner("Computing routes..."):
-            st.session_state.node_df, st.session_state.edge_df = get_graph_data(
-                input_num_cities
-            )
+            st.session_state.node_df, st.session_state.edge_df, st.session_state.metrics = get_graph_data(config)
+
+
+    st.subheader("Optimization Metrics")
+    metrics = st.session_state.metrics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Unmet Demand", f"{metrics['total_unmet_demand']:.2f}")
+    with col2:
+        st.metric("Total Unused Capacity", f"{metrics['total_unused_capacity']:.2f}")
+    with col3:
+        st.metric("Is Optimal", f"{metrics['is_optimal']}")
+    with col4:
+        st.metric("Runtime (s)", f"{metrics['runtime']:.2f}")
 
     node_df = st.session_state.node_df
     edge_df = st.session_state.edge_df
@@ -161,6 +194,8 @@ def create_canada_ui():
 
     config = {'scrollZoom': True}
     st.plotly_chart(fig, use_container_width=True, config=config)
+
+
 
 
 if __name__ == "__main__":
