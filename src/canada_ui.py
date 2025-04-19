@@ -6,48 +6,11 @@ import itertools
 
 from .data import load_canada_cities_df
 from .edmonton import compute_distance_from_edmonton, filter_closest_to_edmonton
-from .distance_matrix import get_distance
 from .mst import solve_mst
 from .demand import generate_demand
 from .solve_flow_problem import solve_flow_problem
 from .config import Config
-def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
-    """Creates a DataFrame representing connections (edges) between all pairs of cities
-       in the input node_df using itertools."""
-    edges = []
-    num_nodes = len(node_df)
-
-    # Use itertools.combinations to generate unique pairs of indices
-    for i, j in itertools.combinations(range(num_nodes), 2):
-        source_city_row = node_df.iloc[i]
-        target_city_row = node_df.iloc[j]
-
-        # Use get_distance for accurate distance calculation
-        distance = get_distance(source_city_row['id'], target_city_row['id'])
-
-        mid_lat = (source_city_row['lat'] + target_city_row['lat']) / 2
-        mid_lon = (source_city_row['lon'] + target_city_row['lon']) / 2
-        hover_text = f"{source_city_row['city']} <-> {target_city_row['city']}: {distance:.2f} km"
-
-        edges.append({
-            'source': source_city_row['id'],
-            'target': target_city_row['id'],
-            'source_lat': source_city_row['lat'],
-            'source_lon': source_city_row['lon'],
-            'target_lat': target_city_row['lat'],
-            'target_lon': target_city_row['lon'],
-            'mid_lat': mid_lat,
-            'mid_lon': mid_lon,
-            'hover_text': hover_text,
-            'distance': distance,
-            'selected': 0, 
-        })
-
-    edge_df = pd.DataFrame(edges)
-    edge_df['selected'] = edge_df['selected'].astype(bool)
-
-    print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools.")
-    return edge_df
+from .create_edge_df import create_edge_df
 
 def get_graph_data(config: Config):
     full_node_df = load_canada_cities_df()
@@ -62,6 +25,7 @@ def get_graph_data(config: Config):
     return node_df, edge_df, metrics
 
 def create_canada_ui():
+    st.set_page_config(page_title="Pipeline Design", layout="wide")
     st.title("Pipeline Design and Flow Optimization")
 
     # Input fields in the sidebar
