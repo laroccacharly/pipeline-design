@@ -36,6 +36,8 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
 
     edge_df = pd.DataFrame(edges)
     edge_df['selected'] = edge_df['selected'].astype(bool)
+    # Add a unique edge ID
+    edge_df['edge_id'] = range(len(edge_df))
 
     print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools.")
     return edge_df
@@ -43,6 +45,7 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
 def duplicate_edges(edge_df: pd.DataFrame) -> pd.DataFrame:
     """
         Duplicate the edges to make it a directed graph.
+
     """
     reverse_source_target = edge_df.copy()
     reverse_source_target['source'] = edge_df['target']
