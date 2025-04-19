@@ -1,5 +1,5 @@
 alias ui="uv run streamlit run ui.py"
-# alias run="uv run main.py"
+alias main="uv run main.py"
 
 
 export APP_NAME="pipeline-design"

@@ -16,7 +16,8 @@ def get_graph_data(config: Config):
     node_df = compute_distance_from_edmonton(full_node_df)
     max_node_count = max(2, config.max_node_count)
     node_df = filter_closest_to_edmonton(node_df, n=max_node_count)
-    node_df = generate_demand(node_df, config.average_capacity_per_node, config.average_demand_per_node)
+    # Pass the seeded rng to generate_demand
+    node_df = generate_demand(node_df, config.average_capacity_per_node, config.average_demand_per_node, config.seed)
     edge_df = create_edge_df(node_df)
     node_df, edge_df = solve_mst(node_df, edge_df)
     edge_df = edge_df[edge_df['selected']]
@@ -79,12 +80,8 @@ def create_canada_ui():
     config = Config(
         average_capacity_per_node=average_capacity_per_city,
         average_demand_per_node=average_demand_per_city,
-        max_node_count=input_num_cities
+        max_node_count=input_num_cities,
     )
-    if 'seeded' not in st.session_state:
-        np.random.seed(42)
-        print("Seeded random number generator")
-        st.session_state.seeded = True
 
     if 'node_df' not in st.session_state or update_button:
         with st.spinner("Computing routes..."):
