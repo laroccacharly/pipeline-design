@@ -45,7 +45,7 @@ def create_canada_ui():
         input_num_cities = st.number_input(
             "Select number of cities to display (closest to Edmonton):",
             min_value=2,  # Need at least 2 cities for an edge
-            max_value=30,
+            max_value=100,
             value="min", 
             step=1,
             key="city_input" # Assign a key for potential future reference
