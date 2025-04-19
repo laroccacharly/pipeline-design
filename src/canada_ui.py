@@ -1,3 +1,4 @@
+import numpy as np
 import streamlit as st
 import plotly.graph_objects as go
 
@@ -80,6 +81,11 @@ def create_canada_ui():
         average_demand_per_node=average_demand_per_city,
         max_node_count=input_num_cities
     )
+    if 'seeded' not in st.session_state:
+        np.random.seed(42)
+        print("Seeded random number generator")
+        st.session_state.seeded = True
+
     if 'node_df' not in st.session_state or update_button:
         with st.spinner("Computing routes..."):
             st.session_state.node_df, st.session_state.edge_df, st.session_state.metrics = get_graph_data(config)

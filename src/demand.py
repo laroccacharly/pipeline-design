@@ -1,9 +1,6 @@
 import pandas as pd 
 import numpy as np
 
-# Set a global seed for reproducibility
-np.random.seed(42)
-
 def generate_demand(node_df: pd.DataFrame, average_capacity_per_city: int = 100, average_demand_per_city: int = 10) -> pd.DataFrame:
     """
     Assigns demand to each node in the dataframe.
