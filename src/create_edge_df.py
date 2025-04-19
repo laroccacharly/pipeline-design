@@ -39,3 +39,12 @@ def create_edge_df(node_df: pd.DataFrame) -> pd.DataFrame:
 
     print(f"Created edge DataFrame with {len(edge_df)} edges between {num_nodes} cities using itertools.")
     return edge_df
+
+def duplicate_edges(edge_df: pd.DataFrame) -> pd.DataFrame:
+    """
+        Duplicate the edges to make it a directed graph.
+    """
+    reverse_source_target = edge_df.copy()
+    reverse_source_target['source'] = edge_df['target']
+    reverse_source_target['target'] = edge_df['source']
+    return pd.concat([edge_df, reverse_source_target], ignore_index=True)

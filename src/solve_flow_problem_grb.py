@@ -2,15 +2,7 @@ import pandas as pd
 import gurobipy as gp
 from gurobipy import GRB
 import networkx as nx
-
-def duplicate_edges(edge_df: pd.DataFrame) -> pd.DataFrame:
-    """
-        Duplicate the edges to make it a directed graph.
-    """
-    reverse_source_target = edge_df.copy()
-    reverse_source_target['source'] = edge_df['target']
-    reverse_source_target['target'] = edge_df['source']
-    return pd.concat([edge_df, reverse_source_target], ignore_index=True)
+from .create_edge_df import duplicate_edges
 
 def solve_flow_problem_grb(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, any]]:
     """
