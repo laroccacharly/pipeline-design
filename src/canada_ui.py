@@ -21,14 +21,18 @@ def get_graph_data(config: Config):
     edge_df = edge_df[edge_df['selected']]
     original_edge_df = edge_df.copy()
     original_node_df = node_df.copy()
-    node_df, edge_df, metrics = solve_flow_problem_grb(original_node_df, original_edge_df)
+    grb_node_df, grb_edge_df, grb_metrics = solve_flow_problem_grb(original_node_df, original_edge_df)
     highs_node_df, highs_edge_df, highs_metrics = solve_flow_problem_highs(original_node_df, original_edge_df)    
-    print(metrics)
-    print(highs_metrics)
-    diff = abs(highs_metrics["total_unmet_demand"] - metrics["total_unmet_demand"])
+    print(grb_metrics)
+    print(highs_metrics)        
+    diff = abs(highs_metrics["total_unmet_demand"] - grb_metrics["total_unmet_demand"])
     assert diff < 1e-6
-    diff = abs(highs_metrics["total_unused_capacity"] - metrics["total_unused_capacity"])
+    diff = abs(highs_metrics["total_unused_capacity"] - grb_metrics["total_unused_capacity"])
     assert diff < 1e-6
+    # use highs 
+    node_df = highs_node_df
+    edge_df = highs_edge_df
+    metrics = highs_metrics
     return node_df, edge_df, metrics
     # return highs_node_df, highs_edge_df, metrics
 

@@ -108,89 +108,66 @@ def solve_flow_problem_highs(node_df: pd.DataFrame, edge_df: pd.DataFrame) -> tu
     is_optimal = (model_status == highspy.HighsModelStatus.kOptimal)
     print("Is optimal: ", is_optimal)
 
-    # --- Process Results --- 
-    if is_optimal or model_status == highspy.HighsModelStatus.kObjectiveBound or model_status == highspy.HighsModelStatus.kObjectiveTarget:
-        
-        # Get solution values using h.vals()
-        flow_values = h.vals(flow_vars)
-        unmet_demand_values = h.vals(unmet_demand_vars)
-        unused_capacity_values = h.vals(unused_capacity_vars)
+    # --- Process Results ---
+    acceptable_statuses = [
+        highspy.HighsModelStatus.kOptimal,
+        highspy.HighsModelStatus.kObjectiveBound,
+        highspy.HighsModelStatus.kObjectiveTarget
+    ]
+    if model_status not in acceptable_statuses:
+        status_str = h.modelStatusToString(model_status)
+        raise RuntimeError(f"Optimization failed or did not find an acceptable solution. Status: {status_str}")
 
-        # Set flow values on directed edge dataframe
-        edge_df_directed['flow'] = 0.0
-        for edge, flow_val in flow_values.items():
-            edge_df_directed.loc[(edge_df_directed['source'] == edge[0]) & (edge_df_directed['target'] == edge[1]), 'flow'] = flow_val
+    # Get solution values using h.vals()
+    flow_values = h.vals(flow_vars)
+    unmet_demand_values = h.vals(unmet_demand_vars)
+    unused_capacity_values = h.vals(unused_capacity_vars)
 
-        total_unmet_demand = sum(unmet_demand_values.values())
-        print(f"Total unmet demand: {total_unmet_demand:.2f}")
+    # Set flow values on directed edge dataframe
+    edge_df_directed['flow'] = 0.0
+    for edge, flow_val in flow_values.items():
+        edge_df_directed.loc[(edge_df_directed['source'] == edge[0]) & (edge_df_directed['target'] == edge[1]), 'flow'] = flow_val
 
-        total_unused_capacity = sum(unused_capacity_values.values())
-        print(f"Total unused capacity: {total_unused_capacity:.2f}")
+    total_unmet_demand = sum(unmet_demand_values.values())
+    print(f"Total unmet demand: {total_unmet_demand:.2f}")
 
-        # Calculate inbound and outbound flow for each node using the directed graph results
-        node_flow_data = {}
-        for node_id in node_list:
-            in_flow = sum(flow_values[edge] for edge in G.in_edges(node_id))
-            out_flow = sum(flow_values[edge] for edge in G.out_edges(node_id))
-            node_flow_data[node_id] = {'inbound_flow': in_flow, 'outbound_flow': out_flow}
-        
-        node_flow_df = pd.DataFrame.from_dict(node_flow_data, orient='index')
-        
-        # Drop existing flow columns if they exist before joining
-        cols_to_drop = ['inbound_flow', 'outbound_flow']
-        node_df = node_df.drop(columns=[col for col in cols_to_drop if col in node_df.columns], errors='ignore')
-        
-        # Ensure 'id' column is suitable for joining
-        if 'id' not in node_df.columns:
-             # If 'id' is the index, reset it
-             if node_df.index.name == 'id':
-                 node_df = node_df.reset_index()
-             else:
-                 # Handle case where 'id' column is missing differently if needed
-                 raise ValueError("Node DataFrame must have an 'id' column or index.")
-        
-        node_df = node_df.set_index('id').join(node_flow_df).reset_index()
+    total_unused_capacity = sum(unused_capacity_values.values())
+    print(f"Total unused capacity: {total_unused_capacity:.2f}")
 
+    node_df_indexed = node_df.set_index('id')
+    node_df_indexed['inbound_flow'] = 0.0
+    node_df_indexed['outbound_flow'] = 0.0
 
-        node_df['flow_difference'] = node_df['inbound_flow'] - node_df['outbound_flow']
-        # Adjust tolerance for floating point comparison
-        tolerance = 1e-6 
-        # Ensure demand is numeric for comparison
-        node_df['demand'] = pd.to_numeric(node_df['demand'], errors='coerce') 
-        node_df['demand_met'] = node_df.apply(
-            lambda row: abs(row['flow_difference'] - row['demand']) < tolerance if pd.notna(row['demand']) else False, 
-            axis=1
-        )
-        
-        # Filter out edges where flow is near zero for the final output
-        edge_df_filtered = edge_df_directed[edge_df_directed['flow'] > tolerance].copy()
-        print("Edges count with flow > 0: ", len(edge_df_filtered))
-        print(edge_df_filtered.head()) # Print head to avoid excessive output
+    # Aggregate flow for each node using the index
+    for (source, target), flow in flow_values.items():
+        if source in node_df_indexed.index:
+                node_df_indexed.loc[source, 'outbound_flow'] += flow
+        if target in node_df_indexed.index:
+                node_df_indexed.loc[target, 'inbound_flow'] += flow
 
-        metrics = {
-            'total_unmet_demand': total_unmet_demand,
-            'total_unused_capacity': total_unused_capacity,
-            'is_optimal': is_optimal,
-            'runtime': runtime,
-            'objective_value': h.getObjectiveValue()
-        }
-    else:
-        print("Optimization failed or did not find an optimal solution.")
-        # Return original dataframes and indicate failure
-        metrics = {
-            'total_unmet_demand': None,
-            'total_unused_capacity': None,
-            'is_optimal': False,
-            'runtime': runtime,
-            'objective_value': None
-        }
-        # Ensure columns exist even if calculation failed
-        if 'inbound_flow' not in node_df.columns:
-             node_df['inbound_flow'] = 0.0
-             node_df['outbound_flow'] = 0.0
-             node_df['flow_difference'] = 0.0
-             node_df['demand_met'] = False
-        # Ensure edge_df_filtered is defined even on failure
-        edge_df_filtered = edge_df_directed[edge_df_directed['flow'] > 1e-6].copy() if 'flow' in edge_df_directed.columns else pd.DataFrame(columns=edge_df_directed.columns)
+    node_df = node_df_indexed.reset_index()
+
+    node_df['flow_difference'] = node_df['inbound_flow'] - node_df['outbound_flow']
+    # Adjust tolerance for floating point comparison
+    tolerance = 1e-6 
+    # Ensure demand is numeric for comparison
+    node_df['demand'] = pd.to_numeric(node_df['demand'], errors='coerce') 
+    node_df['demand_met'] = node_df.apply(
+        lambda row: abs(row['flow_difference'] - row['demand']) < tolerance if pd.notna(row['demand']) else False, 
+        axis=1
+    )
+    
+    # Filter out edges where flow is near zero for the final output
+    edge_df_filtered = edge_df_directed[edge_df_directed['flow'] > tolerance].copy()
+    print("Edges count with flow > 0: ", len(edge_df_filtered))
+    print(edge_df_filtered.head()) 
+
+    metrics = {
+        'total_unmet_demand': total_unmet_demand,
+        'total_unused_capacity': total_unused_capacity,
+        'is_optimal': is_optimal,
+        'runtime': runtime,
+        'objective_value': h.getObjectiveValue()
+    }
 
     return node_df, edge_df_filtered, metrics
